@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -10,6 +10,17 @@ class Flashcard(db.Model):
     front = db.Column(db.String(200), nullable=False)
     back = db.Column(db.String(200), nullable=False)
 
+# Home route
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+# Get all flashcards
+@app.route('/flashcards', methods=['GET'])
+def get_flashcards():
+    flashcards = Flashcard.query.all()
+    return jsonify([{'id': fc.id, 'front': fc.front, 'back': fc.back} for fc in flashcards])
+
 # Create a new flashcard
 @app.route('/flashcards', methods=['POST'])
 def create_flashcard():
@@ -17,31 +28,18 @@ def create_flashcard():
     new_flashcard = Flashcard(front=data['front'], back=data['back'])
     db.session.add(new_flashcard)
     db.session.commit()
-    return jsonify({"message": "Flashcard created!"}), 201
-
-# Get all flashcards
-@app.route('/flashcards', methods=['GET'])
-def get_flashcards():
-    flashcards = Flashcard.query.all()
-    return jsonify([{'id': f.id, 'front': f.front, 'back': f.back} for f in flashcards])
-
-# Update a flashcard
-@app.route('/flashcards/<int:id>', methods=['PUT'])
-def update_flashcard(id):
-    flashcard = Flashcard.query.get_or_404(id)
-    data = request.get_json()
-    flashcard.front = data['front']
-    flashcard.back = data['back']
-    db.session.commit()
-    return jsonify({"message": "Flashcard updated!"})
+    return jsonify({'message': 'Flashcard created successfully!'})
 
 # Delete a flashcard
 @app.route('/flashcards/<int:id>', methods=['DELETE'])
 def delete_flashcard(id):
-    flashcard = Flashcard.query.get_or_404(id)
-    db.session.delete(flashcard)
-    db.session.commit()
-    return jsonify({"message": "Flashcard deleted!"})
+    flashcard = Flashcard.query.get(id)
+    if flashcard:
+        db.session.delete(flashcard)
+        db.session.commit()
+        return jsonify({'message': 'Flashcard deleted successfully!'})
+    else:
+        return jsonify({'message': 'Flashcard not found!'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)

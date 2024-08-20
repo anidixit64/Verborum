@@ -1,4 +1,3 @@
-// static/script.js
 document.addEventListener('DOMContentLoaded', function() {
     const flashcardsContainer = document.getElementById('flashcards-container');
     const createFlashcardForm = document.getElementById('create-flashcard-form');
